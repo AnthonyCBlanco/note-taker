@@ -1,6 +1,7 @@
 const notes = require('express').Router();
 const uuid = require('../helpers/uuid');
-const { readFromFile, readAndAppend } = require('../helpers/fsUtils');
+const { readFromFile, readAndAppend, writeToFile } = require('../helpers/fsUtils');
+const { json } = require('express');
 
 
 // Api GET route for retreieving all notes
@@ -17,7 +18,7 @@ notes.post('/', (req, res) =>{
         const newNote = {
             title,
             text,
-            note_id: uuid(),
+            id: uuid(),
         };
 
         readAndAppend(newNote, './db/db.json');
@@ -25,6 +26,20 @@ notes.post('/', (req, res) =>{
     }else {
         res.json('Error in adding note please try again')
     }
+});
+
+notes.delete('/:id', (req, res) => {
+    const noteId = req.params.id;
+    readFromFile('./db/db.json')
+    .then((data) => JSON.parse(data))
+    .then((json) => {
+        console.log(noteId)
+        const filteredJSON = json.filter((note) => note.id !== noteId);
+
+        writeToFile('./db/db.json', filteredJSON);
+
+        res.json("Note Has been removed")
+    });
 });
 
 module.exports = notes
